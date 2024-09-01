@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Define any environment variables if needed
+        REMOTE_SERVER = '13.201.120.64'
+        REMOTE_USER = 'test'
+        REMOTE_PATH = '/var/www/html'  // Path to deploy code on Apache server
+        GIT_REPO = 'https://github.com/mu-yadav/gra_assign_temp.git'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // Checkout the code from the GitHub main branch
+                git branch: 'main', url: "${env.GIT_REPO}"
+            }
+        }
+
+        stage('Deploy to Apache2') {
+            steps {
+                script {
+                    // Transfer the code to the remote Apache2 webserver
+                    sh """
+                    ssh-keyscan -H ${env.REMOTE_SERVER} >> ~/.ssh/known_hosts
+                    scp -r * ${env.REMOTE_USER}@${env.REMOTE_SERVER}:${env.REMOTE_PATH}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Notify or clean up if necessary
+            echo 'Deployment completed'
+        }
+    }
+}
+
